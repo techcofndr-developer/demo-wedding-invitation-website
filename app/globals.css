@@ -1,0 +1,62 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;0,700;1,300;1,400;1,500&family=Montserrat:wght@200;300;400;500;600&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #fdf7d5;
+  --foreground: #2d221b;
+}
+
+/* Enforce invitation background regardless of device dark mode settings */
+body {
+  color: var(--foreground);
+  background-color: var(--background);
+  font-family: 'Cormorant Garamond', Georgia, serif;
+  overflow-x: clip;
+  margin: 0;
+  padding: 0;
+}
+
+/* Define global font overrides */
+h1, h2, h3, h4, .font-serif {
+  font-family: 'Cormorant Garamond', Georgia, serif;
+}
+
+button, input, select, textarea, .font-sans {
+  font-family: 'Montserrat', sans-serif;
+}
+
+/* Smooth custom scrollbar matching the luxury theme */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #fdf7d5;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.4);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #d4af37;
+}
+
+/* Luxury gold text highlight */
+.gold-text-glow {
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.2);
+}
+
+/* Gold shimmer hover animation keyframes */
+@keyframes shimmer {
+  0% {
+    left: -150%;
+  }
+  100% {
+    left: 150%;
+  }
+}
