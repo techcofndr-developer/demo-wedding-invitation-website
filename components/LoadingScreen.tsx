@@ -73,12 +73,13 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
     const loadedImages: HTMLImageElement[] = [];
     const extractedColors: string[] = [];
 
+    const frameUrlPrefix = process.env.NEXT_PUBLIC_FRAME_URL_PREFIX || "/frames";
     // Generate downsampled frame URLs to save memory and network bandwidth
     const frameUrls = Array.from({ length: TARGET_FRAME_COUNT }, (_, i) => {
       // Evenly distribute frame indices between 1 and 2550
       const frameIndex = Math.round(1 + (i * (TOTAL_SOURCE_FRAMES - 1)) / (TARGET_FRAME_COUNT - 1));
       const frameStr = String(frameIndex).padStart(6, '0');
-      return `/frames/frame_${frameStr}.jpg`;
+      return `${frameUrlPrefix}/frame_${frameStr}.jpg`;
     });
 
     const handleImageLoad = (index: number, img: HTMLImageElement, color: string) => {
