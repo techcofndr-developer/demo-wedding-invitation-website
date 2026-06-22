@@ -24,6 +24,7 @@ export default function FinalInvitation() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({
     name: "",
+    phone: "",
     attendance: "yes",
     guests: "1",
     message: ""
@@ -72,6 +73,7 @@ export default function FinalInvitation() {
 
     const payload = {
       name: formData.name,
+      phone: formData.phone.trim(),
       attendance: attendanceText,
       guests: guestsText,
       message: wishesText
@@ -502,6 +504,21 @@ export default function FinalInvitation() {
                       required
                       placeholder="Your full name"
                       value={formData.name}
+                      onChange={handleInputChange}
+                      className="w-full px-4 py-3 bg-[#fdfbf7] border border-[#d4af37]/50 rounded-xl text-sm text-[#1c140e] font-medium placeholder:text-[#a39081] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/30 transition-all duration-200"
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs uppercase tracking-widest text-[#4a3b32] font-bold mb-2">
+                      WhatsApp Number
+                    </label>
+                    <input
+                      type="tel"
+                      name="phone"
+                      required
+                      placeholder="e.g. +91 98765 43210"
+                      value={formData.phone}
                       onChange={handleInputChange}
                       className="w-full px-4 py-3 bg-[#fdfbf7] border border-[#d4af37]/50 rounded-xl text-sm text-[#1c140e] font-medium placeholder:text-[#a39081] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/30 transition-all duration-200"
                     />

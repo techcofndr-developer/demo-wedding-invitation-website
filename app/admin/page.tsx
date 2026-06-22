@@ -15,6 +15,7 @@ const RSVP_GOOGLE_SHEETS_URL = "https://script.google.com/macros/s/AKfycbx9TS1_F
 interface RSVPRecord {
   timestamp: string;
   name: string;
+  phone: string;
   attendance: "yes" | "no" | "maybe";
   guests: number;
   message: string;
@@ -35,6 +36,48 @@ export default function AdminDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [activeFilter, setActiveFilter] = useState<"all" | "yes" | "no" | "maybe">("all");
 
+  // WhatsApp Broadcast & Notified state
+  const [broadcastMessage, setBroadcastMessage] = useState("Hi {name}, looking forward to celebrating with you at our wedding! - Shubham & Prachi");
+  const [notifiedGuests, setNotifiedGuests] = useState<string[]>([]);
+
+  const messagePresets = [
+    {
+      label: "Ganesh & Haldi Jashn",
+      text: "Hi {name}, sweet reminder! Ganesh & Haldi Jashn (Peele Phoolo Ka Jashn) is starting at 08:30 AM at Riviera Antilia. Join us to bless the couple! - Shubham & Prachi"
+    },
+    {
+      label: "Bollywood Evening",
+      text: "Hi {name}, put on your dancing shoes! Bollywood Evening starts at 06:30 PM at Jade Luxury Banquet. See you there! - Shubham & Prachi"
+    },
+    {
+      label: "Wedding Ceremony",
+      text: "Hi {name}, the big moment is here! Wedding Mahotsava Hast Melap is commencing at 06:30 PM at Kantam Party Plot. Please join us to bless the couple. - Shubham & Prachi"
+    },
+    {
+      label: "Grand Reception",
+      text: "Hi {name}, we look forward to welcoming you! The Grand Reception Gala starts at 07:00 PM at Anokhi Greens. Join us for dinner. - Shubham & Prachi"
+    }
+  ];
+
+  const handleSendWhatsApp = (record: RSVPRecord) => {
+    if (!record.phone) return;
+    const personalizedMessage = broadcastMessage.replace(/{name}/gi, record.name);
+    
+    // Clean phone number: remove +, spaces, dashes, etc.
+    let cleanPhone = record.phone.replace(/[^0-9]/g, "");
+    if (cleanPhone.length === 10) {
+      cleanPhone = "91" + cleanPhone; // Fallback to India prefix if 10 digits
+    }
+    
+    const url = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(personalizedMessage)}`;
+    window.open(url, "_blank");
+    
+    const recordId = `${record.name}-${record.timestamp}`;
+    if (!notifiedGuests.includes(recordId)) {
+      setNotifiedGuests(prev => [...prev, recordId]);
+    }
+  };
+
   // Check auth session on mount
   useEffect(() => {
     const auth = sessionStorage.getItem("admin_auth");
@@ -50,9 +93,10 @@ export default function AdminDashboard() {
       const keys = Object.keys(item);
       
       const nameKey = keys.find(k => k.toLowerCase().includes("name") || k.toLowerCase().includes("fullname")) || keys[1] || "name";
-      const attendKey = keys.find(k => k.toLowerCase().includes("attend") || k.toLowerCase().includes("status")) || keys[2] || "attendance";
-      const guestKey = keys.find(k => k.toLowerCase().includes("guest") || k.toLowerCase().includes("number")) || keys[3] || "guests";
-      const msgKey = keys.find(k => k.toLowerCase().includes("message") || k.toLowerCase().includes("wish") || k.toLowerCase().includes("note")) || keys[4] || "message";
+      const phoneKey = keys.find(k => k.toLowerCase().includes("phone") || k.toLowerCase().includes("mobile") || k.toLowerCase().includes("contact")) || (keys.length >= 6 ? keys[2] : undefined) || "phone";
+      const attendKey = keys.find(k => k.toLowerCase().includes("attend") || k.toLowerCase().includes("status")) || (keys.length >= 6 ? keys[3] : keys[2]) || "attendance";
+      const guestKey = keys.find(k => k.toLowerCase().includes("guest") || k.toLowerCase().includes("number")) || (keys.length >= 6 ? keys[4] : keys[3]) || "guests";
+      const msgKey = keys.find(k => k.toLowerCase().includes("message") || k.toLowerCase().includes("wish") || k.toLowerCase().includes("note")) || (keys.length >= 6 ? keys[5] : keys[4]) || "message";
       const timeKey = keys.find(k => k.toLowerCase().includes("time") || k.toLowerCase().includes("date") || k.toLowerCase().includes("stamp")) || keys[0] || "timestamp";
 
       const rawAttend = String(item[attendKey] || "").toLowerCase();
@@ -84,6 +128,7 @@ export default function AdminDashboard() {
       return {
         timestamp: formattedTime,
         name: String(item[nameKey] || "Unknown Guest"),
+        phone: String(item[phoneKey] || ""),
         attendance,
         guests: parseInt(String(item[guestKey])) || 0,
         message: String(item[msgKey] || "")
@@ -440,6 +485,56 @@ export default function AdminDashboard() {
 
                 </div>
 
+                {/* Planner Broadcast Console */}
+                <div className="bg-[#fdfdfc]/95 border border-[#d4af37]/45 rounded-3xl p-6 mb-8 shadow-sm relative overflow-hidden">
+                  <div className="absolute inset-3 border border-[#d4af37]/15 rounded-[1.25rem] pointer-events-none" />
+                  
+                  <div className="z-10 relative">
+                    <div className="flex items-center justify-between border-b border-[#e6ded4] pb-3 mb-4">
+                      <h3 className="text-sm font-sans uppercase tracking-widest text-[#4a3b32] font-bold flex items-center">
+                        <MessageSquare className="w-4 h-4 text-[#85640c] mr-2" />
+                        Planner WhatsApp Broadcast Console
+                      </h3>
+                      <span className="text-[9px] font-sans bg-[#d4af37]/15 text-[#85640c] px-2.5 py-1 rounded-full font-bold uppercase tracking-wider">
+                        Free Click-To-Chat Integration
+                      </span>
+                    </div>
+
+                    <p className="text-xs text-[#5c4a3c] mb-4 font-sans leading-relaxed font-semibold">
+                      Prepare a message template below. Use the template variable {"{name}"} to dynamically insert each guest&apos;s name. Click <strong className="font-bold">&quot;Notify&quot;</strong> next to any guest in the ledger table below to open WhatsApp with the personalized message.
+                    </p>
+
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 items-start">
+                      {/* Left: Message presets buttons */}
+                      <div className="md:col-span-1 space-y-2 font-sans">
+                        <span className="text-[10px] uppercase tracking-wider text-[#4a3b32] font-bold block mb-1">Preset Templates</span>
+                        {messagePresets.map((preset, pIdx) => (
+                          <button
+                            key={pIdx}
+                            type="button"
+                            onClick={() => setBroadcastMessage(preset.text)}
+                            className="w-full text-left px-3 py-2 border border-[#d4af37]/35 bg-[#fdfbf7] hover:bg-[#d4af37]/10 text-xs text-[#5c4a3c] hover:text-[#1c140e] rounded-xl transition-all font-semibold"
+                          >
+                            {preset.label}
+                          </button>
+                        ))}
+                      </div>
+
+                      {/* Right: Broadcast message editor textarea */}
+                      <div className="md:col-span-3 font-sans">
+                        <span className="text-[10px] uppercase tracking-wider text-[#4a3b32] font-bold block mb-1">Message Template</span>
+                        <textarea
+                          rows={3}
+                          value={broadcastMessage}
+                          onChange={(e) => setBroadcastMessage(e.target.value)}
+                          placeholder="Type your announcement here... Use {name} for guest name."
+                          className="w-full px-4 py-3 bg-[#fdfbf7] border border-[#d4af37]/50 rounded-xl text-xs text-[#1c140e] font-medium placeholder:text-[#a39081] focus:outline-none focus:border-[#d4af37] focus:ring-1 focus:ring-[#d4af37]/30 transition-all resize-none"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Bottom Section: RSVP Guest List Table */}
                 <div className="bg-[#fdfdfc]/95 border border-[#d4af37]/45 rounded-3xl p-6 shadow-sm relative overflow-hidden">
                   <div className="absolute inset-3 border border-[#d4af37]/15 rounded-[1.25rem] pointer-events-none" />
@@ -489,20 +584,22 @@ export default function AdminDashboard() {
 
                   {/* Responsive Table Data */}
                   <div className="overflow-x-auto z-10 relative custom-scrollbar">
-                    <table className="w-full text-left border-collapse text-xs md:text-sm font-sans min-w-[700px]">
+                    <table className="w-full text-left border-collapse text-xs md:text-sm font-sans min-w-[850px]">
                       <thead>
                         <tr className="border-b border-[#e6ded4] text-[#85640c] uppercase font-bold text-[10px] tracking-wider">
                           <th className="pb-3 pl-3">Guest Name</th>
+                          <th className="pb-3">WhatsApp</th>
                           <th className="pb-3">Timestamp</th>
                           <th className="pb-3 text-center">RSVP</th>
                           <th className="pb-3 text-center">Guest Count</th>
                           <th className="pb-3 pl-3">Wishes & Message</th>
+                          <th className="pb-3 text-center">Notify</th>
                         </tr>
                       </thead>
                       <tbody className="divide-y divide-[#e6ded4]/40 text-[#2d221b] font-medium">
                         {filteredRecords.length === 0 ? (
                           <tr>
-                            <td colSpan={5} className="py-8 text-center text-sm italic text-[#7c6655] font-serif">
+                            <td colSpan={7} className="py-8 text-center text-sm italic text-[#7c6655] font-serif">
                               {searchTerm ? "No matching records found." : "No RSVP responses logged yet."}
                             </td>
                           </tr>
@@ -513,6 +610,7 @@ export default function AdminDashboard() {
                               className="hover:bg-[#d4af37]/5 transition-colors group"
                             >
                               <td className="py-3.5 pl-3 font-semibold text-[#1c140e]">{r.name}</td>
+                              <td className="py-3.5 font-mono text-xs text-[#5c4a3c]">{r.phone || <span className="text-[#a39081] italic">N/A</span>}</td>
                               <td className="py-3.5 text-[11px] text-[#5c4a3c]">{r.timestamp}</td>
                               <td className="py-3.5 text-center">
                                 <span className={`inline-flex items-center space-x-1 px-2.5 py-1 rounded-full text-[10px] font-bold capitalize ${
@@ -543,6 +641,24 @@ export default function AdminDashboard() {
                               <td className="py-3.5 text-center font-bold text-[#1c140e]">{r.attendance === "yes" ? Math.max(1, r.guests) : 0}</td>
                               <td className="py-3.5 pl-3 max-w-[280px] truncate text-xs text-[#5c4a3c] font-serif group-hover:text-clip group-hover:whitespace-normal transition-all" title={r.message}>
                                 {r.message ? `"${r.message}"` : <span className="text-[#a39081] font-sans font-light italic">None</span>}
+                              </td>
+                              <td className="py-3.5 text-center">
+                                {r.phone ? (
+                                  <button
+                                    onClick={() => handleSendWhatsApp(r)}
+                                    className={`inline-flex items-center space-x-1 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase transition-all active:scale-95 shadow-sm ${
+                                      notifiedGuests.includes(`${r.name}-${r.timestamp}`)
+                                        ? "bg-emerald-50 text-emerald-700 border border-emerald-300"
+                                        : "bg-[#4a3b32] hover:bg-[#2d1f18] text-white"
+                                    }`}
+                                    title="Send WhatsApp update to this guest"
+                                  >
+                                    <MessageSquare className="w-3 h-3" />
+                                    <span>{notifiedGuests.includes(`${r.name}-${r.timestamp}`) ? "Sent" : "Notify"}</span>
+                                  </button>
+                                ) : (
+                                  <span className="text-[#a39081] italic text-[10px]">No Number</span>
+                                )}
                               </td>
                             </tr>
                           ))
