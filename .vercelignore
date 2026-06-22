@@ -1,0 +1,2 @@
+# Exclude large video frames from Vercel build to bypass deployment size limits
+public/frames/
