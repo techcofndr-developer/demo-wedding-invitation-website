@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Heart, Calendar, Mail } from "lucide-react";
+import { Heart, Calendar, Mail, BookOpen } from "lucide-react";
 
 export default function Navbar() {
   const [isExpanded, setIsExpanded] = useState(false);
@@ -67,8 +67,7 @@ export default function Navbar() {
   };
 
   const navItems = [
-    // Removed the icon for Story (icon: null)
-    { label: "Story", section: "story", targetId: "scrubber-section", icon: null },
+    { label: "Story", section: "story", targetId: "scrubber-section", icon: BookOpen },
     { label: "Details", section: "invitation", targetId: "invitation-section", icon: Heart },
     { label: "Schedule", section: "schedule", targetId: "events-timeline", icon: Calendar },
     { label: "RSVP", section: "rsvp", targetId: "rsvp-section", icon: Mail }
